@@ -1,0 +1,55 @@
+body {
+  background-color: yellow;
+}
+
+h1 {
+  color: grey;
+}
+
+a {
+  color: orange;
+}
+
+a:link {
+  text-decoration: none;
+}
+
+a:hover {
+  color: red;
+  text-decoration: none;
+}
+
+a:visited {
+  color: orange;
+  text-decoration: none;
+}
+
+a:visited:hover {
+  color: red;
+  text-decoration: none;
+}
+
+.firstSelOpt {
+  display: none;
+}
+
+.notFirstSelOpt {
+  color: purple;
+}
+
+.btn-primary {
+  margin-bottom: 15px;
+}
+
+.table {
+  border: 2px solid black;
+  color: orange;
+  width: 50%;
+  background-color: green;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.table th {
+  text-align: center;
+}

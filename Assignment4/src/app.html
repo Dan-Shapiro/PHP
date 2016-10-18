@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="http://code.jquery.com/jquery-latest.js"></script>
+</head>
+<body>
+  <script type="text/javascript">
+    function goBack() {
+      window.location.replace('home.html');
+    }
+    
+    //higher number before lower (better rating)
+    function sortTable()
+    {
+      var rows = $('#tbl tbody  tr').get();
+      
+      rows.sort(function(a, b) {
+        var p = $(a).children('td').eq(2).text();
+        var q = $(b).children('td').eq(2).text();
+        
+        if(p < q)
+        {
+          return 1;
+        }
+        else if(p > q)
+        {
+          return -1;
+        }
+        else
+        {
+          return 0;
+        }
+      });
+      
+      $.each(rows, function(index, row) {
+        $('#tbl').children('tbody').append(row);
+      });
+    }
+    
+    //delete row, delete from db, refresh page to make new table
+    function removeItem()
+    {      
+      $('#tbl tr').filter(':has(:checkbox:checked)').each(function() {
+        var curr = $(this).closest('tr').find('td:eq(1)').text();
+        $.post("removeTable.php", { "table": "appetizer", "titles": curr }, function(data) {
+
+        });
+      });
+        
+        window.location.replace(location);
+    }
+    
+    //remove item and add it to destination db, refresh page
+    function moveItem()
+    {
+      var arr = [
+        {val : 0, text: 'Move This To:'},
+        {val : 1, text: 'Entree_menu'},
+        {val : 0, text: 'Appetizer_menu'},
+        {val : 3, text: 'Favorite_menu'}
+      ];
+    
+      var sel = $('<select>');
+      sel.attr('id', 'sel1');
+      sel.appendTo('#here');
+      $(arr).each(function() {
+        var opt = $('<option>');
+        opt.text(this.text);
+        if(this.val != 0)
+        {
+          opt.attr('class', 'notFirstSelOpt');
+        }
+        else
+        {
+          opt.attr('class', 'firstSelOpt');
+        }
+        sel.append(opt);
+      });
+    
+      $('select').change(function() { 
+        var selected = $('#sel1 option:selected').text();
+        if(selected != 'Select a menu') {
+          var strSel = "";
+      
+          switch (selected)
+          {
+            case 'Entree_menu':
+              strSel = "entree";
+              break;
+            case 'Appetizer_menu':
+              strSel = "appetizer";
+              break;
+            case 'Favorite_menu':
+              strSel = "favorite";
+              break;
+            default:
+              break;
+          }
+          
+          var destination = strSel;
+          $('#tbl tr').filter(':has(:checkbox:checked)').each(function() {
+            var curr = $(this).closest('tr').find('td:eq(1)').text();
+            var count = 0;
+            $.post("getApp.php", function(data) {
+              var output = jQuery.parseJSON(data);
+              
+              var t = $.trim(output[count][0]);
+              var i = $.trim(output[count][1]);
+              var d = $.trim(output[count][2]);
+              var r = $.trim(output[count][3]);
+              count++;
+              
+              $.post("appendTable.php", { "table": destination, "title": t, "direc": d, "ingre": i, "rate": r }, function(data) {
+                
+              });
+            });
+            
+            $.post("removeTable.php", { "table": "appetizer", "titles": curr }, function(data) {
+
+            });
+            
+          });
+          
+          window.location.replace(location);
+        }
+      });
+    }
+    
+    //append to db, add row to table
+    function addItem()
+    {
+      var formDiv = $('<div>');
+      
+      var formTbl = $('<table>');
+      formTbl.attr('id', 'formTbl');
+      formTbl.attr('class', 'table');
+      
+      var row1 = $('<tr>');
+      var left1 = $('<td>');
+      left1.append("Title: ");
+      row1.append(left1);
+      var right1 = $('<td>');
+      var input1 = $('<input>');
+      input1.attr('id', 'newTitle');
+      input1.attr('type', 'text');
+      right1.append(input1);
+      row1.append(right1);
+      formTbl.append(row1);
+      
+      var row2 = $('<tr>');
+      var left2 = $('<td>');
+      left2.append("Directions: ");
+      row2.append(left2);
+      var right2 = $('<td>');
+      var input2 = $('<input>');
+      input2.attr('id', 'newDirec');
+      input2.attr('type', 'text');
+      right2.append(input2);
+      row2.append(right2);
+      formTbl.append(row2);
+      
+      var row3 = $('<tr>');
+      var left3 = $('<td>');
+      left3.append("Ingredients (# separated): ");
+      row3.append(left3);
+      var right3 = $('<td>');
+      var input3 = $('<input>');
+      input3.attr('id', 'newIngre');
+      input3.attr('type', 'text');
+      right3.append(input3);
+      row3.append(right3);
+      formTbl.append(row3);
+      
+      var row4 = $('<tr>');
+      var left4 = $('<td>');
+      left4.append("Rating: ");
+      row4.append(left4);
+      var right4 = $('<td>');
+      var input4 = $('<input>');
+      input4.attr('id', 'newRate');
+      input4.attr('type', 'text');
+      right4.append(input4);
+      row4.append(right4);
+      formTbl.append(row4);
+      
+      formDiv.append(formTbl);
+      formDiv.appendTo('#here');
+    
+      var go = $('<button>');
+      go.attr('type', 'button');
+      go.attr('class', 'btn btn-primary btn-sm');
+      go.html('Add it');
+      go.attr('onclick', 'addIt()');
+
+      go.appendTo('#here');
+    }
+    
+    function addIt()
+    {
+      var newTitle = $('#newTitle').val();
+      var newDirec = $('#newDirec').val();
+      var newIngre = $('#newIngre').val();
+      var newRate = $('#newRate').val();
+      
+      $.post("appendTable.php", { "table": "appetizer", "title": newTitle, "direc": newDirec, "ingre": newIngre, "rate": newRate }, function(data) {
+        window.location.replace(location);
+      });
+    }
+    
+    //on load create the page and get from db
+    $(document).ready(function() {
+      $.post("getApp.php", function(data) {
+        var output = jQuery.parseJSON(data);
+        
+        for(var i = 0; i < output.length; i++) {
+          localStorage['title' + i] = $.trim(output[i][0]);
+          localStorage['ingre' + i] = $.trim(output[i][1]);
+          localStorage['direc' + i] = $.trim(output[i][2]);
+          localStorage['rate' + i] = $.trim(output[i][3]);
+
+          var row = $('<tr>');
+          row.append($("<td><input type=\"checkbox\" id=\"chk" + i + "\"></td>"));
+          row.append($("<td><a href='appRec.html?row=" + i + "'>" + output[i][0] + "</a></td>"));
+          row.append($("<td>" + output[i][3] + "</td>"));
+          $('#tbl tbody').append(row);
+        }
+      });
+      
+      var arr = [
+        {val : 0, text: 'Go To:'},
+        {val : 1, text: 'Entree_menu'},
+        {val : 0, text: 'Appetizer_menu'},
+        {val : 3, text: 'Favorite_menu'}
+      ];
+    
+      var sel = $('<select>').appendTo('#content');
+      $(arr).each(function() {
+        var opt = $('<option>');
+        opt.text(this.text);
+        if(this.val != 0)
+        {
+          opt.attr('class', 'notFirstSelOpt');
+        }
+        else
+        {
+          opt.attr('class', 'firstSelOpt');
+        }
+        sel.append(opt);
+      });
+    
+      $('select').change(function() { 
+        var selected = $('select option:selected').text();
+        if(selected != 'Select a menu') {
+          var strSel = "";
+      
+          switch (selected)
+          {
+            case 'Entree_menu':
+              strSel = "ent";
+              break;
+            case 'Appetizer_menu':
+              strSel = "app";
+              break;
+            case 'Favorite_menu':
+              strSel = "fav";
+              break;
+            default:
+              break;
+          }
+          var strRedirect = strSel + ".html";
+          window.location.replace(strRedirect);
+        }
+      });
+    });
+  </script>
+
+
+  <div id="content" class="text-center">
+    <h1>You are on the Appetizer menu</h1>
+    <input class="btn btn-primary" type="button" value="Return to Cookbook" onClick="goBack()">
+    <table class="table table-bordered" id="tbl">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Title</th>
+          <th>Rating</th>
+        </tr>
+      </thead>
+      
+      <tbody></tbody>
+    </table>
+    
+    <div class="btn-group">
+      <button type="button" class="btn btn-primary" onclick="removeItem()">Delete</button>
+      <button type="button" class="btn btn-primary" onclick="addItem()">Add</button>
+      <button type="button" class="btn btn-primary" onclick="moveItem()">Move</button>
+      <button type="button" class="btn btn-primary" onclick="sortTable()">Sort</button>
+    </div>
+    <div id="here"></div>
+  </div>
+
+</body>
+</html>

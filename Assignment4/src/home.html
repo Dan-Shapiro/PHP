@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="http://code.jquery.com/jquery-latest.js"></script>
+</head>
+<body>
+
+
+<script type="text/javascript"> 
+  //toggle open/close
+  function whichProcess()
+  {
+    if($('#cookbook').attr("value") == "Open Cookbook") 
+    {
+      $('#cookbook').attr('value', "Close Cookbook");
+      process();
+    }
+    else {
+      $('#cookbook').attr('value', "Open Cookbook");
+      restart();
+    }
+  }
+  
+  //closed
+  function restart()
+  {
+    $('div_center').remove();
+  }
+  
+  //opened, create page (dropdown table of contents)
+	function process()
+	{
+  
+    var arr = [
+      {val : 0, text: 'Select a menu'},
+      {val : 1, text: 'Entree_menu'},
+      {val : 2, text: 'Appetizer_menu'},
+      {val : 3, text: 'Favorite_menu'}
+    ];
+    
+    var div_center = $('<div>').appendTo('body');
+    div_center.attr('class', 'text-center');
+    var sel = $('<select>');
+    div_center.append(sel);
+    $(arr).each(function() {
+      var opt = $('<option>');
+      opt.text(this.text);
+      if(this.val != 0)
+      {
+        opt.attr('class', 'notFirstSelOpt');
+      }
+      else
+      {
+        opt.attr('class', 'firstSelOpt');
+      }
+      sel.append(opt);
+    });
+    
+    $('select').change(function() { 
+      var selected = $('select option:selected').text();
+      if(selected != 'Select a menu') {
+        var strSel = "";
+      
+        switch (selected)
+        {
+          case 'Entree_menu':
+            strSel = "ent";
+            break;
+          case 'Appetizer_menu':
+            strSel = "app";
+            break;
+          case 'Favorite_menu':
+            strSel = "fav";
+            break;
+          default:
+            break;
+        }
+        var strRedirect = strSel + ".html";
+        window.location.replace(strRedirect);
+      }
+    });
+	}
+  
+  
+  
+</script>
+
+<div class="text-center">
+  <h1>Welcome to Dan's Cookbook Site!</h1>
+  <input id="cookbook" class="btn btn-primary" type="button" value="Open Cookbook" onClick="whichProcess()">
+</div>
+
+</body>
+</html>

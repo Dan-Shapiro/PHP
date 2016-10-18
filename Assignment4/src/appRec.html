@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="http://code.jquery.com/jquery-latest.js"></script>
+</head>
+<body>
+  <script type="text/javascript">
+    var url = location.search.split('?')[1];
+    var parts = url.split('&');
+    
+    var n = parts[0].substring(4);
+    
+    var title = localStorage['title1' + n];
+    var ingres = localStorage['ingre1' + n];
+    var dir = localStorage['direc1' + n];
+    var rate = localStorage['rate1' + n];
+    
+    var ingArr = ingres.split('#');
+    
+    localStorage.ingCounter = 0;
+    localStorage.toRemove = "";
+    
+    function goBack()
+    {
+      window.location.replace('app.html');
+    }
+    
+    //add a row to the table
+    function addIng()
+    {
+      var formDiv = $('<div>');
+      formDiv.attr('id', 'formDiv');
+      var input = $('<input>');
+      input.attr('id', 'newIng');
+      input.attr('type', 'text');
+      var go = $('<button>');
+      go.attr('type', 'button');
+      go.attr('class', 'btn btn-primary btn-sm');
+      go.html('Add it');
+      go.attr('onclick', 'addToTable()');
+      
+      formDiv.append(input);
+      formDiv.append('<br>');
+      formDiv.append(go);
+      formDiv.appendTo('#content');
+    }
+    
+    function addToTable()
+    {
+      var newVal = $('#newIng').val();
+    
+      var row = $('<tr>');
+      row.append($("<td><input type=\"radio\" value=\"" + localStorage.ingCounter + "\"id=\"radio" + localStorage.ingCounter + "\" name='x'></td>"));
+      localStorage.ingCounter++;
+      row.append($("<td>Ingredient</td>"));
+      row.append($("<td class='ing'>" + newVal + "</td>"));
+      $('#tbl tbody').append(row);
+      
+      $('#formDiv').remove();
+    }
+    
+    //modify an ingredient
+    function changeIng()
+    {
+      var formDiv = $('<div>');
+      formDiv.attr('id', 'formDiv');
+      var input = $('<input>');
+      input.attr('id', 'newIng');
+      input.attr('type', 'text');
+      var go = $('<button>');
+      go.attr('type', 'button');
+      go.attr('class', 'btn btn-primary btn-sm');
+      go.html('Change it');
+      go.attr('onclick', 'modifyTable()');
+      
+      formDiv.append(input);
+      formDiv.append('<br>');
+      formDiv.append(go);
+      formDiv.appendTo('#content');
+    }
+    
+    function modifyTable()
+    {
+      var newVal = $('#newIng').val();
+      var radNum = $("input[name=x]:checked").val();
+      var cell = 11 + (3 * radNum);
+      
+      $("#tbl td:eq(" + cell + ")").html(newVal);
+      $('#formDiv').remove();
+    }
+    
+    //remove a row
+    function removeIng()
+    {
+      var radNum = $("input[name=x]:checked").val();
+      var row = 4 + parseInt(radNum);
+      localStorage.toRemove = localStorage.toRemove + "#" + row;
+      
+      $("#tbl tr:nth-child(" + row + ")").hide(1);
+    }
+    
+    function changeRate()
+    {
+      var formDiv = $('<div>');
+      formDiv.attr('id', 'formDiv');
+      formDiv.append("1=bad 2=good 3=excellent");
+      formDiv.append($('<br>'));
+      var input = $('<input>');
+      input.attr('id', 'newRate');
+      input.attr('type', 'text');
+      var go = $('<button>');
+      go.attr('type', 'button');
+      go.attr('class', 'btn btn-primary btn-sm');
+      go.html('Change it');
+      go.attr('onclick', 'modifyTableRate()');
+      
+      formDiv.append(input);
+      formDiv.append('<br>');
+      formDiv.append(go);
+      formDiv.appendTo('#content');
+    }
+    
+    function modifyTableRate()
+    {
+      var newVal = $('#newRate').val();
+      var cell = 5;
+      
+      $("#tbl td:eq(" + cell + ")").html(newVal);
+      $('#formDiv').remove();
+    }
+    
+    //modify the directions
+    function changeDir()
+    {
+      var formDiv = $('<div>');
+      formDiv.attr('id', 'formDiv');
+      var input = $('<input>');
+      input.attr('id', 'newDir');
+      input.attr('type', 'text');
+      var go = $('<button>');
+      go.attr('type', 'button');
+      go.attr('class', 'btn btn-primary btn-sm');
+      go.html('Change it');
+      go.attr('onclick', 'modifyTableDir()');
+      
+      formDiv.append(input);
+      formDiv.append('<br>');
+      formDiv.append(go);
+      formDiv.appendTo('#content');
+    }
+    
+    function modifyTableDir()
+    {
+      var newVal = $('#newDir').val();
+      var cell = 8;
+      
+      $("#tbl td:eq(" + cell + ")").html(newVal);
+      $('#formDiv').remove();
+    }
+    
+    //save the changes into the db, refresh page
+    function saveTable()
+    {
+      removeNeeded();
+      
+      var ings = "";
+      var t = "";
+      var dirs = "";
+      $('#tbl tr').each(function (i, row) {
+        if($(this).find(".ing").html())
+        {
+          if(ings != "") {
+            ings = ings + "#";
+          }
+          ings = ings + $(this).find(".ing").html();
+        }
+        else if($(this).find(".title").html())
+        {
+          t = $(this).find(".title").html();
+        }
+        else if($(this).find(".dir").html())
+        {
+          dirs = $(this).find(".dir").html();
+        }
+        else if($(this).find(".rate").html())
+        {
+          rates = $(this).find(".rate").html();
+        }
+      });
+      
+      $.post("updateTable.php", { "val1": ings, "val2": dirs, "val3": rates, "title": t, "table": "appetizer" }, function(data) {
+        localStorage['ingre1' + n] = ings;
+        localStorage['direc1' + n] = dirs;
+        localStorage['rate1' + n] = rates;
+        alert("Recipe saved!");
+        window.location.replace(location);
+      });
+    }
+    
+    function removeNeeded()
+    {
+      var rows = localStorage.toRemove.split('#');
+      for(var i = 1; i < rows.length; i++)
+      {
+        $("#tbl tr:nth-child(" + rows[i] + ")").remove();
+      }
+    }
+    
+    //on load create the table from the db
+    $(document).ready(function() {
+      var rowTitle = $('<tr>');
+      rowTitle.append($("<td></td>"));
+      rowTitle.append($("<td>Title</td>"));
+      rowTitle.append($("<td class='title'>" + title + "</td>"));
+      $('#tbl tbody').append(rowTitle);
+      
+      var rowRate = $('<tr>');
+      rowRate.append($("<td></td>"));
+      rowRate.append($("<td>Rating</td>"));
+      rowRate.append($("<td class='rate'>" + rate + "</td>"));
+      $('#tbl tbody').append(rowRate);
+      
+      var rowDir = $('<tr>');
+      rowDir.append($("<td></td>"));
+      rowDir.append($("<td>Directions</td>"));
+      rowDir.append($("<td class='dir'>" + dir + "</td>"));
+      $('#tbl tbody').append(rowDir);
+      
+      for(var i = 0; i < ingArr.length; i++)
+      {
+        var row = $('<tr>');
+        row.append($("<td><input type=\"radio\" value=\"" + localStorage.ingCounter + "\"id=\"radio" + localStorage.ingCounter + "\" name='x'></td>"));
+        localStorage.ingCounter++;
+        row.append($("<td>Ingredient</td>"));
+        row.append($("<td class='ing'>" + ingArr[i] + "</td>"));
+        $('#tbl tbody').append(row);
+      }
+    });
+  </script>
+  
+  <br>
+  <div id="content" class="text-center">
+    <input class="btn btn-primary" type="button" value="Return to Menu" onClick="goBack()">
+    <table class="table table-bordered" id="tbl">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Category</th>
+          <th>Appetizer_menu</th>
+        </tr>
+      </thead>
+      
+      <tbody></tbody>
+    </table>
+    
+    <div class="btn-group">
+      <button type="button" class="btn btn-primary" onclick="addIng()">Add Ingredient</button>
+      <button type="button" class="btn btn-primary" onclick="changeIng()">Change Ingredient</button>
+      <button type="button" class="btn btn-primary" onclick="removeIng()">Remove Ingredient</button>
+    </div>
+    <br>
+    <div class="btn-group">
+      <button type="button" class="btn btn-primary" onclick="changeRate()">Change Rating</button>
+      <button type="button" class="btn btn-primary" onclick="changeDir()">Change Directions</button>
+      <button type="button" class="btn btn-primary" onclick="saveTable()">Save</button>
+    </div>
+    
+  </div>
+</body>
+</html>
